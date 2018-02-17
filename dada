@@ -1,0 +1,4 @@
+#!/bin/bash
+
+dd status=progress if=$1 of=$2 $3
+notify-send "Your dd command FINALLY fucking finished."
