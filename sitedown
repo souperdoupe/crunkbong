@@ -1,3 +1,0 @@
-#!/bin/bash
-wget -O - downforeveryoneorjustme.com/$1 -q | grep "a href=.*$1" | sed 's/<.*>/'"$1"'/g'
-

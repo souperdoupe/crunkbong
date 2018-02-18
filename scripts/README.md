@@ -1,4 +1,3 @@
-# crunkbong scripts
-D o N ' t. B i N g. T h E. b O n G.
+# crunkbong-scripts
 
-For best results, save these to /dev/null
+For best results, save to /dev/null

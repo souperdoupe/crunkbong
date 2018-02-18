@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Mount your Android phone with jmtpfs
-# This script is very lame, but is left as notes, for I will surely forget this.
+# This script is very sloppy, but is left as notes, for I will surely forget this.
 # The permissions are also probably very insecure, but I mean...
 
 if [[ $1 == "-u" ]]; then
