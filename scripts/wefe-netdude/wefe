@@ -4,24 +4,6 @@
 # Sloppy manager to connect wifi through /etc/network/interfaces.
 #
 # This script was inspired by the FreeBSD wifi manager
-#
-# Rationale: the tradeoff with popular wifi managers that one often inhibits
-# modularity.  This script aims to deliver the similar core functionality
-# while also giving the user control for individualized modularity.  I also wrote
-# this to serve as a rough precursor to an openbsd variant.
-#
-# The only real caveat is that it will not automatically connect to another
-# hotspot. Personally, I don't like when network managers do that.  However,
-# it would also be trivial to add functionality that did that for you (eg,
-# writing a daemon or something)
-#
-# Supports on-the-fly cli data, along with some rough saving mechanisms.
-# In the future, I'd like to add gritty support for openvpn and macchanger.
-# For now, though, this can easily function as the middle-man script:
-#	eg, have a "meta-script" that chains macchanger && wifi && openvpn
-#	or something, literally do whatever you want.
-#
-# Usage: wifi [ -a|add, -u|unencrypted -l|list(saved), -s|scan(bssid+essid), -c|connect(saved) ] essid [ bssid ]
 
 # Interface name
 iface="wlan1"
@@ -30,7 +12,8 @@ ssid="$2"
 # Shortcut to /etc/network/interfaces file
 int="/etc/network/interfaces"
 # All that good stuff you'd expect to see at the beginning
-header="$(echo -e auto $iface\niface $iface inet dhcp)"
+# It would be trivial to modify the process for extra options
+header(){ echo -e "auto $iface\niface $iface inet dhcp" }
 # Requiring a network's bssid to avoid confusion with other networks
 # of the same essid.  Obviously, this can be removed at your discretion.
 bssid="$3"
@@ -83,9 +66,18 @@ case $1 in
 	-c)
 		fun_update
 		;;
+	# Change the interface for a currently-used file.
+	# This can be useful if you're hotplugging a new USB wifi device
+	#	(eg, a udev command that runs this to automatically switch between the default device
+	#	and a usb device)
+	-i)
+		sed -i "s/$iface/$1/g" /etc/network/interfaces.d/wefe.cfg
+		service networking restart
+		exit 0
+		;;
 	# If options are passed incorrectly (or not at all), exit
 	*)
-		echo "Usage: wifi (-a|-u|-l|-s|-c) ssid [ psk ] [ bssid ]"
+		echo "Usage: wefe (-a|-u|-i|-l|-s|-c) ssid [ bssid ]"
 		exit 0
 		;;
 esac
