@@ -1,0 +1,95 @@
+#!/bin/ksh93
+
+# WeFe - wefe enables fidelity everywhere
+# Sloppy manager to connect wifi through /etc/network/interfaces.
+#
+# This script was inspired by the FreeBSD wifi manager
+#
+# Rationale: the tradeoff with popular wifi managers that one often inhibits
+# modularity.  This script aims to deliver the similar core functionality
+# while also giving the user control for individualized modularity.  I also wrote
+# this to serve as a rough precursor to an openbsd variant.
+#
+# The only real caveat is that it will not automatically connect to another
+# hotspot. Personally, I don't like when network managers do that.  However,
+# it would also be trivial to add functionality that did that for you (eg,
+# writing a daemon or something)
+#
+# Supports on-the-fly cli data, along with some rough saving mechanisms.
+# In the future, I'd like to add gritty support for openvpn and macchanger.
+# For now, though, this can easily function as the middle-man script:
+#	eg, have a "meta-script" that chains macchanger && wifi && openvpn
+#	or something, literally do whatever you want.
+#
+# Usage: wifi [ -a|add, -u|unencrypted -l|list(saved), -s|scan(bssid+essid), -c|connect(saved) ] essid [ bssid ]
+
+# Interface name
+iface="wlan1"
+# essid
+ssid="$2"
+# Shortcut to /etc/network/interfaces file
+int="/etc/network/interfaces"
+# All that good stuff you'd expect to see at the beginning
+header="$(echo -e auto $iface\niface $iface inet dhcp)"
+# Requiring a network's bssid to avoid confusion with other networks
+# of the same essid.  Obviously, this can be removed at your discretion.
+bssid="$3"
+
+# I could easily compress this entire middle portion into a single sed command
+# using the -e option.  However, that would be really big and require
+# word-wrapping, which I find annoying.
+fun_update() {
+	# Copy the desired ssid config to network interfaces
+	# Note: all configs that end with .cfg will be auto-loaded
+	cp /etc/wpa/$ssid /etc/network/interfaces.d/wefe.cfg
+	# Restart the networking daemon
+	service networking restart
+	}
+
+# Options -- this script requires one of these...
+case $1 in
+
+	# Add a wpa-protected network, and attempt to connect with it.
+	-a)
+		# If no bssid was entered, spit and error and exit.
+		if [[ "$bssid" == "" ]]; then echo -e "bssid required\nWill now use -s to scan for mac addresses.  Find yours and rerun the script with it" && \
+		wefe -s && exit 0; fi
+		# Obfuscate the network passphrase.  Ideally, I would have something to just
+		# replace the input values with asterisk so you can see the number of characters
+		echo "Input network passphrase, then press ENTER..." && stty -echo && read key && stty echo && \
+  		psk="$(wpa_passphrase $ssid $key | grep psk | grep -v '#' | sed 's/.*psk=//')"
+		# Create configuration file
+		echo -e "$header\n\t"'ssid="'$ssid'"\n\tpsk="'$psk'"\n\tbssid="'$bssid'"' > /etc/wpa/$ssid && \
+		# Update the network interface
+		fun_update
+		;;
+	# Add an open network && connect
+	# I need to test this b/c I'm not sure how the variables will change.
+	#-u)
+		#echo -e "network={\n\tssid=$1\n\tkey_mgmt=NONE\n}" > /etc/wpa/$name && fun_restart
+		#;;
+	# List previously-connected hotspots
+	-l)
+		ls /etc/wpa
+		exit 0
+		;;
+	# Scan for networks: BSSID and ESSID
+	# Currently, the output is atrocious: the AP MAC appears above the ssid
+		-s)
+		iwlist wlan1 scanning | grep -e "Address" -e "ESSID" | sed -e 's/.* Address: //g' -e 's/.* ESSID://g' -e 's/"/"\n/2' -e 's/"//g'
+		exit 0
+		;;
+	# Connect to a saved hotspot
+	-c)
+		fun_update
+		;;
+	# If options are passed incorrectly (or not at all), exit
+	*)
+		echo "Usage: wifi (-a|-u|-l|-s|-c) ssid [ psk ] [ bssid ]"
+		exit 0
+		;;
+esac
+
+# Just in case I want to add anything before formally killing the script
+# eg, passing a line for openvpn, network information, etc.
+exit 0
