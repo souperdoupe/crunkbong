@@ -9,6 +9,6 @@ sed 's/ksh93/sh/g' ./wefe
 mkdir /etc/wpa
 
 # Move the wefe script to /usr/local/bin
-cp ./wefe /usr/local/sbin
+cp ./wefe /usr/local/bin
 
 exit 0
