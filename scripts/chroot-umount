@@ -1,0 +1,8 @@
+#!/bin/bash
+echo "If something breaks, try lsof /mnt, etc..."
+umount /mnt/dev/pts
+umount /mnt/dev
+umount /mnt/sys
+umount /mnt/proc
+umount /mnt
+echo "Done."

@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Mount your Android phone with jmtpfs
+# This script is very lame, but is left as notes, for I will surely forget this.
+# The permissions are also probably very insecure, but I mean...
+
+if [[ $1 == "-u" ]]; then
+	fusermount -u /media/android
+	exit 0
+fi
+
+jmtpfs /media/android
+echo "Mounted at /media/android -- enjoy."
+sleep 1s

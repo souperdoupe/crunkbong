@@ -1,0 +1,66 @@
+#!/bin/bash
+
+# Script to mount a virtualbox image to a location (/mnt)
+# This script is very limited in functioninality.  You can mount a VDI to /mnt
+# Currently, I have little intention of modifying anything significantly.
+
+# Also, this script breaks for some indiscernable reason.
+# If the mount command complains that "special device /dev/nbd0p1 does not exist,"
+# just run the script again, or try manually entering the commands.  Idk why it does that.
+# Sleep commands are used intermittently because I noticed that, if it runs too
+# quickly, the elements of the script will falter (again, for indiscernible reasons)
+
+# Usage: vbox-mount [ -u | /path/to/virtualbox/device.vdi ]
+echo "Enter partition number (default: enter p1)"
+read p
+if [[ $p == "" ]]; then p=1; fi
+
+# Unmount, if you so desire
+case $1 in
+	-u)
+		umount /mnt
+		qemu-nbd -d /dev/nbd0p$p
+		rmmod nbd
+		exit 0
+		;;
+	"")
+		echo "Usage: vbox-mount [-u | /path/to/virtualbox/device.vdi]"
+		exit 0
+		;;
+esac
+
+# Check if something is mounted on /mnt, and if so, exit so you can take care of it.
+if [[ $(mount | grep /mnt) ]]; then
+	mount | grep /mnt
+	echo "You've already got something mounted there, pal.  Do something about that first."
+	exit 0
+fi
+
+# A fun confirmation dialogue
+echo -e "FACTS:\n\tVDI Path: $1\n\tDevice name: nbd0p$p\n\tMount point:/mnt\n\tContinue?  y/n"
+read cont
+if [[ $cont != "y" ]]; then
+exit 0
+fi
+
+# Perform a quick device and modual cleanse
+if [[ $(fdisk -l 2>&1 | grep nbd) ]]; then
+	qemu-nbd -d /dev/nbd0
+	sleep 1s
+	fi
+if [[ $(lsmod | grep nbd) ]]; then
+	rmmod nbd
+	sleep 1s
+	fi
+
+# Load kernel module and initialize device nbd
+echo "Establishing device..."
+modprobe nbd max_part=16
+sleep 1s
+qemu-nbd -c /dev/nbd0 "$1"
+# Sleep for 2 seconds.  If it tries to immediately mount the nbd device,
+# mount will complain that it doesn't exist and, consequently, will not mount.
+sleep 2s
+# Set up the device on /mnt
+# Obviously, this should probably be adjusted in the future
+mount /dev/nbd0p$p /mnt

@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Bright is the swiss army knife of brightness control
+# This script assumes you have a /sys/class/brightness folder and devices symlinked
+# If you do not, this script is worthless to you, and you may need to install ACPI
+# or upgrade your computer.
+
+# Btw, ACPI is taking precedence from now on because of the sins of Ascii's power management,
+# which I assume is a result of their migration from systemd utilities/resources
+
+# Test for backlight devices.  In the future, modify this so the user can
+# select which device they want.
+#if [[ ! -d /sys/class/backlight/* ]]; then echo -e "Can't find anything in /sys/class/backlight.  (This is very unfortunate.)\nTry symlinking these directories?"; fi
+
+function brite {
+bright=$(cat /etc/bright)
+}
+
+brite
+# There should really be a check here for an integer value.
+if [[ $1 == "-u" ]]; then echo $2 > /etc/bright; brite
+# Set a temporary value
+elif [[ $1 == "-t" ]]; then bright="$2"; fi
+# Read from a file or something.  Make it if it isn't already there.
+if [ ! $(cat /etc/bright) ]; then echo -e "Cannot find /etc/bright (config)\nRerun with -u and set a value"; fi
+
+# There is a way to divide /sys/class/backlight/[device]/max_brightness by
+# whatever percentage value you want, and produce an integer, but idr
+# the syntax.
+tee /sys/class/backlight/acpi_video0/brightness <<< "$bright"

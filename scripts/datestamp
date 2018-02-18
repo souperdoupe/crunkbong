@@ -1,0 +1,2 @@
+#!/bin/sh
+date --iso-8601=seconds | sed -e 's/T/_/g' -e 's/+.*//g'
