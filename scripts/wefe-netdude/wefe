@@ -9,11 +9,11 @@
 iface="wlan1"
 # essid
 ssid="$2"
-# Shortcut to /etc/network/interfaces file
-int="/etc/network/interfaces"
 # All that good stuff you'd expect to see at the beginning
 # It would be trivial to modify the process for extra options
-header(){ echo -e "auto $iface\niface $iface inet dhcp" }
+header(){
+	echo -e "auto $iface\niface $iface inet dhcp"
+	}
 # Requiring a network's bssid to avoid confusion with other networks
 # of the same essid.  Obviously, this can be removed at your discretion.
 bssid="$3"
@@ -21,7 +21,7 @@ bssid="$3"
 # I could easily compress this entire middle portion into a single sed command
 # using the -e option.  However, that would be really big and require
 # word-wrapping, which I find annoying.
-fun_update() {
+fun_update(){
 	# Copy the desired ssid config to network interfaces
 	# Note: all configs that end with .cfg will be auto-loaded
 	cp /etc/wpa/$ssid /etc/network/interfaces.d/wefe.cfg
