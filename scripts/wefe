@@ -23,10 +23,14 @@
 #
 # Usage: wifi [ -a|add, -u|unencrypted -l|list(saved), -s|scan(bssid+essid), -c|connect(saved) ] essid [ bssid ]
 
-# Variables: starting with the essid
+# Interface name
+iface="wlan1"
+# essid
 ssid="$2"
 # Shortcut to /etc/network/interfaces file
 int="/etc/network/interfaces"
+# All that good stuff you'd expect to see at the beginning
+header="$(echo -e auto $iface\niface $iface inet dhcp)"
 # Requiring a network's bssid to avoid confusion with other networks
 # of the same essid.  Obviously, this can be removed at your discretion.
 bssid="$3"
@@ -35,12 +39,9 @@ bssid="$3"
 # using the -e option.  However, that would be really big and require
 # word-wrapping, which I find annoying.
 fun_update() {
-	# Read from a configuration file that already exists
-	source /etc/wpa/$ssid && \
-	# Update the values in the interfaces file
-	sed -i "s/wpa-ssid .*/wpa-ssid \"$ssid\"/" $int && \
-	sed -i "s/wpa-psk .*/wpa-psk \"$psk\"/" $int && \
-	sed -i "s/wpa-bssid .*/wpa-bssid \"$bssid\"/" $int && \
+	# Copy the desired ssid config to network interfaces
+	# Note: all configs that end with .cfg will be auto-loaded
+	cp /etc/wpa/$ssid /etc/network/interfaces.d/wefe.cfg
 	# Restart the networking daemon
 	service networking restart
 	}
@@ -51,13 +52,14 @@ case $1 in
 	# Add a wpa-protected network, and attempt to connect with it.
 	-a)
 		# If no bssid was entered, spit and error and exit.
-		if [[ "$bssid" == "" ]]; then echo -e "bssid required, use -s to scan for mac addresses\nExiting..." && exit 0; fi
+		if [[ "$bssid" == "" ]]; then echo -e "bssid required\nWill now use -s to scan for mac addresses.  Find yours and rerun the script with it" && \
+		wefe -s && exit 0; fi
 		# Obfuscate the network passphrase.  Ideally, I would have something to just
 		# replace the input values with asterisk so you can see the number of characters
 		echo "Input network passphrase, then press ENTER..." && stty -echo && read key && stty echo && \
   		psk="$(wpa_passphrase $ssid $key | grep psk | grep -v '#' | sed 's/.*psk=//')"
 		# Create configuration file
-		echo -e 'ssid="'$ssid'"\npsk="'$psk'"\nbssid="'$bssid'"' > /etc/wpa/$ssid && \
+		echo -e "$header\n\t"'ssid="'$ssid'"\n\tpsk="'$psk'"\n\tbssid="'$bssid'"' > /etc/wpa/$ssid && \
 		# Update the network interface
 		fun_update
 		;;
@@ -74,7 +76,7 @@ case $1 in
 	# Scan for networks: BSSID and ESSID
 	# Currently, the output is atrocious: the AP MAC appears above the ssid
 		-s)
-		iwlist wlan1 scanning | grep -e "Address" -e "ESSID" | sed -e 's/.* Address: //g' -e 's/.* ESSID://g'
+		iwlist wlan1 scanning | grep -e "Address" -e "ESSID" | sed -e 's/.* Address: //g' -e 's/.* ESSID://g' -e 's/"/"\n/2' -e 's/"//g'
 		exit 0
 		;;
 	# Connect to a saved hotspot
