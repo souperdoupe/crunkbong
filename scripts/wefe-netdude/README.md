@@ -4,7 +4,9 @@ benefits of modern network managers don't really apply (yet).  Nonetheless, its 
 networks.  This project is inspired by ceni and the freebsd wifi manager.
 
 
-By editing /etc/network/interfaces directly, you can add other functionality, and modify the script to suit your needs, rather easily.
+wefe -a will create a file for a sepcific network using a specified interface; this file will then be copied to /etc/network/interfaces.d/$interface.cfg. 
+By editing /etc/network/interfaces directly, you can further modify functionality, and modify the script to suit your needs, rather easily.  Additional
+reading on managing interfaces can be found through Google searching and man interfaces.
 
 
 You must declare one of these options:
