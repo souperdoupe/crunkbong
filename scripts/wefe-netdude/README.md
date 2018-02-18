@@ -8,7 +8,7 @@ wefe -a will create a file for a sepcific network using a specified interface; t
 By editing /etc/network/interfaces directly, you can further modify functionality, and modify the script to suit your needs, rather easily.  Additional
 reading on managing interfaces can be found through Google searching and man interfaces.
 
-
+# usage
 You must declare one of these options:
 
 -a : add a new network and connect.  You MUST specify an essid and bssid (wefe -s will populate a list).
