@@ -1,14 +1,24 @@
 #!/bin/sh
 
+# Check for root
+if [ "$EUID" -ne 0 ]; then
+	echo "Please run as root."
+	exit
+fi
+
+# Make sure values in interfaces.d will be loaded
+# Add a stanza if not.
+if [ ! "$(grep 'source-directory /etc/network/interfaces.d/*' /etc/network/interfaces ]; then
+echo "source-directory /etc/network/interfaces.d/*" >> /etc/network/interfaces
+fi
+
 # Updates the default script's shell from ksh93 to sh
 # If you're like me, and like/use ksh93, comment this line out.
 # apt-get install ksh
-sed 's/ksh93/sh/g' ./wefe
+sed 's/ksh93/sh/g' ./wefe && \
 
 # Create the default configuration directory
-mkdir /etc/wpa
+mkdir /etc/wpa && \
 
 # Move the wefe script to /usr/local/bin
-cp ./wefe /usr/local/bin
-
-exit 0
+cp ./wefe /usr/local/bin && \
