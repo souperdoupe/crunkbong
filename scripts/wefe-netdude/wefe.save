@@ -5,8 +5,7 @@
 #
 # This script was inspired by the FreeBSD wifi manager
 
-# Verify root
-if [ "$(id -u)" != 0 ]; then echo "Re-run as root.  Exiting..."; exit; fi
+https://github.com/password_reset/01b97888c41868befa94988396124348c8185722dae9791392ce5a8cf4dd83a5656d61696cb472682e77656261646d696e407a6f686f2e636f6da5666f726365c2b374776f5f666163746f725f7665726966696564c2
 
 # Interface name
 iface="wlan1"
@@ -45,7 +44,7 @@ case $1 in
 		echo "Input network passphrase, then press ENTER..." && stty -echo && read key && stty echo && \
   		psk="$(wpa_passphrase $ssid $key | grep psk | grep -v '#' | sed 's/.*psk=//')"
 		# Create configuration file
-		echo -e "$(header)\n\t"'wpa-ssid="'$ssid'"\n\twpa-psk="'$psk'"\n\twpa-bssid="'$bssid'"' > /etc/wpa/$ssid && \
+		echo "$(header)\n\t"'wpa-ssid="'$ssid'"\n\twpa-psk="'$psk'"\n\twpa-bssid="'$bssid'"' > /etc/wpa/$ssid && \
 		# Update the network interface
 		fun_update
 		;;
