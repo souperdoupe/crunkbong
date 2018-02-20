@@ -1,10 +1,7 @@
 #!/bin/sh
 
 # Check for root
-if [ "$EUID" -ne 0 ]; then
-	echo "Please run as root."
-	exit
-fi
+if [ "$(id -u)" != 0 ]; then echo "Re-run as root.  Exiting..."; exit; fi
 
 # Make sure values in interfaces.d will be loaded
 # Add a stanza if not.
@@ -15,7 +12,7 @@ fi
 # Updates the default script's shell from ksh93 to sh
 # If you're like me, and like/use ksh93, comment this line out.
 # apt-get install ksh
-sed 's/ksh93/sh/g' ./wefe && \
+sed -i 's/ksh93/sh/g' ./wefe && \
 
 # Create the default configuration directory
 mkdir /etc/wpa && \
