@@ -45,7 +45,7 @@ case $1 in
 		echo "Input network passphrase, then press ENTER..." && stty -echo && read key && stty echo && \
   		psk="$(wpa_passphrase '$ssid' $key | grep psk | grep -v '#' | sed 's/.*psk=//')"
 		# Create configuration file
-		echo -e "$(header)\n\t"'wpa-ssid="'$ssid'"\n\twpa-psk="'$psk'"\n\twpa-bssid="'$bssid'"' > /etc/wpa/$ssid && \
+		echo -e "$(header)\n\t"'wpa-ssid "'$ssid'"\n\twpa-psk "'$psk'"\n\twpa-bssid "'$bssid'"' > /etc/wpa/$ssid && \
 		# Update the network interface
 		fun_update
 		;;
