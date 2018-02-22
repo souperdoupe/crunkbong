@@ -44,7 +44,7 @@ exops(){
 	# You can also manipulate whatever you want here.  For example,
 	# if you want to remove the plaintext password, uncomment the following.
 	sed -i 's/#psk.*//g' /etc/wefe/wefe-sup/"$ssid"
- 	echo "}" > /etc/wefe/wefe-sup/"$ssid"
+ 	echo "}" >> /etc/wefe/wefe-sup/"$ssid"
 }
 
 # Options -- this script requires one of these...
