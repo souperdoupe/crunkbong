@@ -6,7 +6,7 @@ if [ "$(id -u)" != 0 ]; then echo "Re-run as root.  Exiting..."; exit; fi
 # Make sure values in interfaces.d will be loaded
 # Add a stanza if not.
 if [ ! "$(grep 'source-directory /etc/network/interfaces.d/*' /etc/network/interfaces ]; then
-echo "source-directory /etc/network/interfaces.d/*" >> /etc/network/interfaces
+echo "source /etc/network/interfaces.d/*" >> /etc/network/interfaces
 fi
 
 # Updates the default script's shell from ksh93 to sh
