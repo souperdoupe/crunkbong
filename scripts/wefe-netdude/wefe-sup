@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # WeFe - wefe enables fidelity everywhere
-# Sup wefe, we now have wpa_supplicant support.
-# Sloppy manager to connect wifi through /etc/network/interfaces.
+# Sup wefe, we now have wpa_supplicant support (Thanks to Head_on_a_Stick for the idea)
+# Sloppy manager to connect wifi through wpa_supplicant
 #
-# This script was inspired by the FreeBSD wifi manager
+# This script was inspired by Ceni the FreeBSD wifi manager
 
 # Verify root
 if [ "$(id -u)" != 0 ]; then echo "Re-run as root.  Exiting..."; exit; fi
@@ -58,8 +58,10 @@ case $1 in
 		# Obfuscate the network passphrase.  Ideally, I would have something to just
 		# replace the input values with asterisk so you can see the number of characters
 		echo "Input network passphrase, then press ENTER..." && stty -echo && read key && stty echo && \
+		# This will generate the bare minimum for an encrypted network.
 		wpa_passphrase "$ssid" "$key" > /etc/wefe/wefe-sup/"$ssid"
 		# If you have any extra options, uncomment this line.
+		# See also: man wpa_supplicant.conf
 		#exops
 		# Update the network interface
 		fun_update
@@ -83,14 +85,13 @@ case $1 in
 	-c)
 		fun_update
 		;;
-	# Change the interface for a currently-used file.
+	# Temporarily change the interface for a currently-used file, and connect or reconnect
 	# This can be useful if you're hotplugging a new USB wifi device
 	#	(eg, a udev command that runs this to automatically switch between the default device
 	#	and a usb device)
 	-i)
-		sed -i "s/$iface/$1/g" /etc/network/interfaces.d/wefe.cfg
-		service networking restart
-		exit 0
+		iface="$3"
+		fun_update
 		;;
 	# If options are passed incorrectly (or not at all), exit
 	*)
