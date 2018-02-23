@@ -16,9 +16,17 @@ found through Google searching and manpages (ie, man interfaces).
 
 # Rationale
 The tradeoff with popular wifi managers that one often inhibits
-modularity.  This script aims to deliver the similar core functionality
+modularity.  There are two scripts, which both achieve a fundamental goal, but
+do so in different ways (both have their own installer, too):
+
+
+wefe-if: uses network/interfaces directly.  This script aims to deliver the similar core functionality
 while also giving the user control for individualized modularity.  I also wrote
 this to serve as a rough precursor to an openbsd variant.
+
+
+wefe-sup: uses wpa_supplicant.  Fundamentally the same as the former, but accomplishes 
+its goal using wpa_supplicant directly.
 
 
 The only real caveat is that it will not automatically connect to another
