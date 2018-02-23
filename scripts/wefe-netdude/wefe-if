@@ -1,4 +1,4 @@
-#!/bin/ksh93
+#!/bin/bash
 
 # WeFe - wefe enables fidelity everywhere
 # Sloppy manager to connect wifi through /etc/network/interfaces.
@@ -43,7 +43,7 @@ case $1 in
 		# Obfuscate the network passphrase.  Ideally, I would have something to just
 		# replace the input values with asterisk so you can see the number of characters
 		echo "Input network passphrase, then press ENTER..." && stty -echo && read key && stty echo && \
-  		psk="$(wpa_passphrase '$ssid' $key | grep psk | grep -v '#' | sed 's/.*psk=//')"
+  		psk=$(wpa_passphrase "$ssid" "$key" | grep psk | grep -v '#' | sed 's/.*psk=//')
 		# Create configuration file
 		echo -e "$(header)\n\t"'wpa-ssid "'$ssid'"\n\twpa-psk "'$psk'"\n\twpa-bssid "'$bssid'"' > /etc/wpa/$ssid && \
 		# Update the network interface
