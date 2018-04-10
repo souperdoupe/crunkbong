@@ -1,0 +1,33 @@
+#!/bin/ksh
+
+# Embarassing script that monitors certain system functions for whatever reason
+# You can add clauses above and below the main df clause.  Usually, I need
+# something like this if I'm running a program that's taking too long or gives
+# me pause for concern
+#
+# The joke is Santa Clause.
+
+# Main clause runs either in the middle, or is the default (without options)
+mang="df -h"
+main(){
+	# Usually, df is the preferred command
+	# Leaving this as a function because, if you want to add more to the
+	# main clause, you have the flexibility to do so.
+	$mang
+}
+
+while getopts ":ab" opt; do
+case ${opt} in
+	a) echo "Enter commands to run above the df clause:" && read above ;;
+	b) echo "Enter commands to run below the df clause:" && read below ;;
+	m) echo "Enter the main command:" && read mang ;;
+	"") continue ;;
+	*) "Incorrect usage: santa [ -a | -b ]" && exit;;	
+esac; done
+
+while sleep 1; do
+	clear
+	$above
+	main
+	$below
+done
