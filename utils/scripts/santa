@@ -16,13 +16,13 @@ main(){
 	$mang
 }
 
-while getopts ":ab" opt; do
+while getopts ":abm" opt; do
 case ${opt} in
 	a) echo "Enter commands to run above the df clause:" && read above ;;
 	b) echo "Enter commands to run below the df clause:" && read below ;;
 	m) echo "Enter the main command:" && read mang ;;
 	"") continue ;;
-	*) "Incorrect usage: santa [ -a | -b ]" && exit;;	
+	*) "Incorrect usage: santa [ -a | -b | -m ]" && exit;;	
 esac; done
 
 while sleep 1; do
