@@ -1,0 +1,19 @@
+#!/bin/ksh
+
+# Notes for managing jobs
+# In the form of a script
+
+# https://unix.stackexchange.com/questions/2107/how-to-suspend-and-resume-processes
+
+case $2 in 
+	pause)
+		kill -TSTP $3
+		;;
+	resume)
+		KILL -cont $3
+		;;
+	*)
+		echo "Usage: jerbs [pause | resume] [pid]"
+		;;
+esac
+
