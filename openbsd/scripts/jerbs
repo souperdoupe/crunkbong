@@ -4,13 +4,16 @@
 # In the form of a script
 
 # https://unix.stackexchange.com/questions/2107/how-to-suspend-and-resume-processes
+# Debugging
+#echo $1
+#echo $2
 
-case $2 in 
+case $1 in 
 	pause)
-		kill -TSTP $3
+		kill -TSTP $2
 		;;
 	resume)
-		KILL -cont $3
+		kill -CONT $2
 		;;
 	*)
 		echo "Usage: jerbs [pause | resume] [pid]"
