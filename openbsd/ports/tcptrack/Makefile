@@ -3,7 +3,7 @@
 COMMENT =	sniffer which displays information about TCP connections
 CATEGORIES =	net
 
-GH_ACCOUNT =	souperdoupe
+GH_ACCOUNT =	bchretien
 GH_PROJECT =	tcptrack
 GH_TAGNAME =	v1.4.3
 
