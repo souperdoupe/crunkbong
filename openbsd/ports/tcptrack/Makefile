@@ -7,7 +7,7 @@ GH_ACCOUNT =	bchretien
 GH_PROJECT =	tcptrack
 GH_TAGNAME =	v1.4.3
 
-MAINTAINER =	Reince Hall <apollo@startmail.com>
+MAINTAINER =	Reince Hall <siva@startmail.com>
 
 # Repo has a copy of LGPLv2.1
 # But some source files (src/main.cc) say it's GPLv2+
