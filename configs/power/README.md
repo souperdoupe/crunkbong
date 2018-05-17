@@ -7,10 +7,11 @@ actually understand the infrastructures they use.
 
 # Structure
 
-etc
-|-acpi/ (lid.sh)
-|-acpi/events/ (lid)
-|-pm/sleep.d/ (00lock)
+/etc/acpi/ (lid.sh)
+
+/etc/acpi/events/ (lid)
+
+/etc/pm/sleep.d/ (00lock)
 
 By understanding the relationship between these directories, one can manually
 perform many of the functions that a normal power manager does.  
