@@ -1,11 +1,11 @@
-#Crunkbong Power Management
+# Crunkbong Power Management
 
 Unlike literally most Linux distros, crunkbong uses no centralized power
 manager.  Instead, it uses the same utilities directly, just like
 other projects' power management does. This is to encourage users to
 actually understand the infrastructures they use.
 
-#Structure
+# Structure
 
 etc
 |-acpi/ (lid.sh)
