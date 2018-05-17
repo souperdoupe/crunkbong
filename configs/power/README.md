@@ -2,7 +2,7 @@
 
 Unlike literally most Linux distros, crunkbong uses no centralized power
 manager.  Instead, it uses the same utilities directly, just like
-other projects' power management does. This is to encourage users to
+other projects' power managers do. This is to encourage users to
 actually understand the infrastructures they use.
 
 # Structure
