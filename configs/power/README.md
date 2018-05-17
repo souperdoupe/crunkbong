@@ -18,8 +18,11 @@ perform many of the functions that a normal power manager does.
 
 # Using graphical apps with acpi scripts
 There are two things necessary when running graphical apps with any acpi scripts, whether directly or indirectly
+
 1) export DISPLAY=:0
+
 2) su -c [command] [user]
+
 If you're using acpi to run your power manager, be sure to tell any gui scripts (eg, slock)
 run by acpi directly (eg, lid.sh) or indirectly (eg, 00lock) to use the current
 X11 display to run, and run them as a specified user.
@@ -28,8 +31,11 @@ If you're running crunkbong as user 'crunkbong', you can just copy/paste the
 following into your customization, and call any gui apps with the run function:
 
 `# Define your display
+
 export DISPLAY=:0
+
 # Run a specified program as user
+
 run(){ su -c "$1" crunkbong; }`
 
 
