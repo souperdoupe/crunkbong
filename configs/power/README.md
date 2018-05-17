@@ -30,13 +30,13 @@ X11 display to run, and run them as a specified user.
 If you're running crunkbong as user 'crunkbong', you can just copy/paste the 
 following into your customization, and call any gui apps with the run function:
 
-`# Define your display
+`# Define your display`
 
-export DISPLAY=:0
+`export DISPLAY=:0`
 
-# Run a specified program as user
+`# Run a specified program as user`
 
-run(){ su -c "$1" crunkbong; }`
+`run(){ su -c "$1" crunkbong; }`
 
 
 # WIP
