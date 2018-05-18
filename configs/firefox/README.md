@@ -11,10 +11,15 @@ it there.
 
 ### Testing some features
 browserleaks.com has several useful pages to check leaked information:
+
 browserleaks.com/ip
+
 browserleaks.com/javascript
+
 browserleaks.com/canvas
+
 browserleaks.com/webrtc
+
 Note that most of the values reported by these websies can be altered or spoofed in about:config (prefs.js values).
 
 ### WIP
