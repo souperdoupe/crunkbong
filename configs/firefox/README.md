@@ -20,7 +20,7 @@ browserleaks.com/canvas
 
 browserleaks.com/webrtc
 
-Note that most of the values reported by these websies can be altered or spoofed in about:config (prefs.js values).
+Note that most of the values reported by these websies can be altered or spoofed in about:config (prefs.js values).  You can compare the values reported by a default firefox install with those reported after using this customized prefs.js file.
 
 ### WIP
 I'm looking at writing a script that only replaces significant lines.  I could probably implement this whole thing as an add-on, but I lack the expertise; also, note that Mozilla is making significant changes to the way it handles add-ons, whereas simply reading values from prefs.js, a mere file, hasn't changed much in nature.
