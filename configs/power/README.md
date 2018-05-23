@@ -2,7 +2,7 @@
 
 Unlike literally most Linux distros, crunkbong uses no centralized power
 manager.  Instead, it uses the same utilities directly, just like
-other projects' power managers do.   It is based on conversations (here)[https://dev1galaxy.org/viewtopic.php?id=774].
+other projects' power managers do.   It is based on conversations here: https://dev1galaxy.org/viewtopic.php?id=774.
 
 # Structure
 
