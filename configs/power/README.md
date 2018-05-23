@@ -8,11 +8,13 @@ This configuration requires acpid and pm-utils.  slock (from the suckless-tools 
 
 ### Structure
 
-/etc/acpi/lid.sh
+/etc/acpi/events/lid - tells acpi to listen for lid events, and run lid.sh
 
-/etc/acpi/events/lid
+/etc/acpi/lid.sh - runs pm-suspend
 
-/etc/pm/sleep.d/00lock
+/etc/pm/sleep.d/00lock - defines the default display as a variable, and tells pm-suspend/hibernate to run slock whenever suspending or hibernating
+
+This is the default behavior.  Each of these can be modified or removed.
 
 By understanding the relationship between these directories, one can manually
 perform many of the functions that a normal power manager does.  
