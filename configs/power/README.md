@@ -29,11 +29,8 @@ export DISPLAY=:0 - It is necessary that acpi knows exactly which display you're
 ### Run as user
 su -c [command] [user] - since acpi runs as root, it is necessary to run anything that "should" be ran as a user to 
 
-If you're using acpi to run your power manager, be sure to tell any gui scripts (eg, slock)
-run by acpi directly (eg, lid.sh) or indirectly (eg, 00lock) to use the current
-X11 display to run, and run them as a specified user.
 ### Example function
-crunkbong uses the following set of commands to ensure the proper display is used, and that a command is ran as a user:
+crunkbong uses the following set of commands to ensure the proper display is used, and that a command is ran as a user.  Its usage can be observed in the file 00lock:
 
 `# Define your display`
 
