@@ -4,7 +4,9 @@ Unlike literally most Linux distros, crunkbong uses no centralized power
 manager.  Instead, it uses the same utilities directly, just like
 other projects' power managers do.   It is based on conversations here: https://dev1galaxy.org/viewtopic.php?id=774.
 
-# Structure
+This configuration requires `acpid` and `pm-utils`.  `slock` (from the `suckless-tools` package) is used in 00lock as a locking utility, but this is optional, especially if you want another locking utility, or none at all.
+
+### Structure
 
 /etc/acpi/lid.sh
 
@@ -14,6 +16,10 @@ other projects' power managers do.   It is based on conversations here: https://
 
 By understanding the relationship between these directories, one can manually
 perform many of the functions that a normal power manager does.  
+
+### Installation
+
+Place the files in the directories noted in the "structure" section above.  When the lid is closed (events/lid), acpi should run pm-suspend (lid.sh) with its graphical and console hooks (00lock).
 
 # Using graphical apps with acpi scripts
 There are two things necessary when running graphical apps with any acpi scripts, whether directly or indirectly
