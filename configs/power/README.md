@@ -7,17 +7,16 @@ other projects' power managers do.   It is based on conversations here: https://
 This configuration requires acpid and pm-utils.  slock (from the suckless-tools package) is used in 00lock as a locking utility, but this is optional, especially if you want another locking utility, or none at all.
 
 ### Structure
+By understanding the relationship between these files and directories, one can manually
+perform many of the functions that a gui power manager does:
 
-/etc/acpi/events/lid - tells acpi to listen for lid events, and run lid.sh
+1) /etc/acpi/events/lid - tells acpi to listen for lid events, and run lid.sh
 
-/etc/acpi/lid.sh - runs pm-suspend
+2) /etc/acpi/lid.sh - runs pm-suspend
 
-/etc/pm/sleep.d/00lock - defines the default display as a variable, and tells pm-suspend/hibernate to run slock whenever suspending or hibernating
+3) /etc/pm/sleep.d/00lock - defines the default display as a variable, and tells pm-suspend/hibernate to run slock whenever suspending or hibernating
 
 This is the default behavior.  Each of these can be modified or removed.
-
-By understanding the relationship between these directories, one can manually
-perform many of the functions that a normal power manager does.  
 
 ### Installation
 
@@ -25,17 +24,16 @@ Place the files in the directories noted in the "structure" section above.  When
 
 # Using graphical apps with acpi scripts
 There are two things necessary when running graphical apps with any acpi scripts, whether directly or indirectly
-
-1) export DISPLAY=:0
-
-2) su -c [command] [user]
+### DISPLAY variable
+export DISPLAY=:0 - It is necessary that acpi knows exactly which display you're running it on.
+### Run as user
+su -c [command] [user] - since acpi runs as root, it is necessary to run anything that "should" be ran as a user to 
 
 If you're using acpi to run your power manager, be sure to tell any gui scripts (eg, slock)
 run by acpi directly (eg, lid.sh) or indirectly (eg, 00lock) to use the current
 X11 display to run, and run them as a specified user.
-
-If you're running crunkbong as user 'crunkbong', you can just copy/paste the 
-following into your customization, and call any gui apps with the run function:
+### Example function
+crunkbong uses the following set of commands to ensure the proper display is used, and that a command is ran as a user:
 
 `# Define your display`
 
@@ -47,4 +45,4 @@ following into your customization, and call any gui apps with the run function:
 
 
 # WIP
--Minimal way to suspend after a period of time.  Still working on this one.  However, in a real crunkbong environment, you probably don't want to be in a live session long enough to care about this.  
+-Minimal way to suspend after a period of time.  However, in a real crunkbong environment, you probably don't want to be in a live session long enough to care about this.  
