@@ -6,7 +6,45 @@
 if [ ! -d /etc/wefe ]; then echo "/etc/wefe doesn't exist.  Run the installer before continuing."; fi
 iface=ral0
 
-# --WHAT'S YOUR FUNCTION--
+## --ALL THE FUNCTIONS -- ##
+##						  ##
+
+# Add a new wireless network
+add_network(){
+	echo "Enter hotspot/access point name (SSID):"
+	read ssid
+	echo "Enter wifi passphrase:"
+	read psk
+	# if the psk variable is blank, assume an insecure network, and strip 'wpa'
+	# NOTE: due to weird-ass syntax, I'm not sure how to translate this to fully
+	# replace the thing a couple of lines down.
+	if [[ "$psk" == "" ]]; then 
+		wpa_clause=""
+		else wpa_clause="wpa wpakey \"$psk\""
+	fi
+	# Connect to an AP using MAC address
+	echo "Enter the hotspot MAC address (optional):"
+	read bssid
+	ap=$(echo "$ssid" | sed 's/ /_/g')
+    # Spoof the MAC address, if desired
+	echo "Would you like to spoof the MAC address of $iface? Options:
+                New Address:    type it in XX:XX:XX:XX:XX:XX format
+                Random address: type 'random'  
+                Default address: type 'default'"
+        read custom_mac
+        if [[ "$custom_mac" == "default" ]]; then lladdr="";
+		elif [[ "$custom_mac" == "random" ]]; then lladdr="lladdr random";
+		else lladdr="lladdr $custom_mac"; 
+		fi
+	echo "If you want any shell commands to run when BEFORE you connect to this network, enter them now.  (Note: you can manually edit the AP config file later, too.)"
+	while read preops; do if [ ! $(echo $preops | grep -o done) ]; then echo "$preops" > /etc/wefe/saved/"$ap"; else break; fi; done
+	echo "Configuring ifconfig and dhclient template in /etc/wefe/saved/$ap..."
+	# Weird quote structure in order to assure double-quotes are printed literally
+	echo -e ifconfig $iface nwid '"'$ssid'"' $wpa_clause $lladdr "\n"dhclient $iface >> /etc/wefe/saved/"$ap"
+	echo "Done."
+	echo "If you want any shell commands to run when AFTER you connect to this network, enter them now.  (Note: you can manually edit the AP config file later, too.)"
+	while read postops; do if [ ! $(echo $postops | grep -o done) ]; then echo "$postops" >> /etc/wefe/saved/"$ap"; else break; fi; done
+	}
 
 # Purge settings
 purge_settings(){
@@ -51,70 +89,7 @@ avail_ap(){
 	fi; done; }
 
 # Function to connect to nth access point, if desired
-
-
-# --HERE WE GO--
-case $1 in 
-
-# Add a new network
-add)
-	echo "Enter hotspot/access point name (SSID):"
-	read ssid
-	echo "Enter wifi passphrase:"
-	read psk
-	# if the psk variable is blank, assume an insecure network, and strip 'wpa'
-	# NOTE: due to weird-ass syntax, I'm not sure how to translate this to fully
-	# replace the thing a couple of lines down.
-	if [[ "$psk" == "" ]]; then 
-		wpa_clause=""
-		else wpa_clause="wpa wpakey \"$psk\""
-	fi
-	# Connect to an AP using MAC address
-	echo "Enter the hotspot MAC address (optional):"
-	read bssid
-	ap=$(echo "$ssid" | sed 's/ /_/g')
-        # Spoof the MAC address, if desired
-	echo "Would you like to spoof the MAC address of $iface? Options:
-                New Address:    type it in XX:XX:XX:XX:XX:XX format
-                Random address: type 'random'  
-                Default address: type 'default'"
-        read custom_mac
-        if [[ "$custom_mac" == "default" ]]; then lladdr="";
-		elif [[ "$custom_mac" == "random" ]]; then lladdr="lladdr random";
-		else lladdr="lladdr $custom_mac"; 
-		fi
-	echo "If you want any shell commands to run when BEFORE you connect to this network, enter them now.  (Note: you can manually edit the AP config file later, too.)"
-	while read preops; do if [ ! $(echo $preops | grep -o done) ]; then echo "$preops" > /etc/wefe/saved/"$ap"; else break; fi; done
-	echo "Configuring ifconfig and dhclient template in /etc/wefe/saved/$ap..."
-	# Weird quote structure in order to assure double-quotes are printed literally
-	echo -e ifconfig $iface nwid '"'$ssid'"' $wpa_clause $lladdr "\n"dhclient $iface >> /etc/wefe/saved/"$ap"
-	echo "Done."
-	echo "If you want any shell commands to run when AFTER you connect to this network, enter them now.  (Note: you can manually edit the AP config file later, too.)"
-	while read postops; do if [ ! $(echo $postops | grep -o done) ]; then echo "$postops" >> /etc/wefe/saved/"$ap"; else break; fi; done
-	echo "Attempting to connect to $ssid..."
-	connect
-;;
-
-# Connect
-on)
-	# Since saved networks replace whitespace with underscore, check yoself...
-	ssid="$(echo $2 | sed 's/ /_/g')"
-	# ...and use the underscored modification as the connectable AP.
-	ap=$(echo "$ssid" | sed 's/ /_/g')
-	connect
-	;;
-
-# Info about current iface
-info) ifconfig $iface ;;
-
-# Install (first-time usage)
-install)
-	mkdir -p /etc/wefe/saved
-	touch /etc/wefe/exops
-	;;
-
-# Lazy mode (autoconnect) - I use this in my /etc/apm/suspend and hibernate scripts
--l)
+lazy_connect(){
 	# List all saved ssids
 	saved="$(ls /etc/wefe/saved)"
 	# Scan and list current networks
@@ -137,16 +112,44 @@ install)
 		if [ $(grep $ssid /tmp/scan) ]; then 
 		connect && exit 0; 
 	fi; done
-	rm -f /tmp/scan ;;
+	rm -f /tmp/scan
+	}
+
+## --WEFE OPTIONS AND USAGE-- ##
+case $1 in 
+##							  ##
+# Add a new network
+add) add_network && echo "Attempting to connect to $ssid..." && connect ;;
+
+# List only networks that are both available and stored
+avail) echo "Scanning for available access points..." && avail_ap ;;
+
+# Connect
+on)
+	# Since saved networks replace whitespace with underscore, check yoself...
+	ssid="$(echo $2 | sed 's/ /_/g')"
+	# ...and use the underscored modification as the connectable AP.
+	ap=$(echo "$ssid" | sed 's/ /_/g')
+	connect
+	;;
+
+# Info about current iface
+info) ifconfig $iface ;;
+
+# Install (first-time usage)
+install)
+	mkdir -p /etc/wefe/saved
+	touch /etc/wefe/exops
+	;;
+
+# Lazy mode (autoconnect) - I use this in my /etc/apm/suspend and hibernate scripts
+-l) lazy_connect ;;
 
 # List saved networks
 list) stored_ap ;;
 
 # Purge interface settings
 purge) purge_settings ;;
-
-# List only networks that are both available and stored
-avail) echo "Scanning for available access points..." && avail_ap ;;
 
 # Scan for all available networks, in two forms...
 scan) 
