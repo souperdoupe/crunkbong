@@ -8,6 +8,7 @@
 tmpdir="~/.irid-tmp";
 # Remove the existing folder, just in case
 rm -r -P $tmpdir 2> /dev/null;
+# Use a fresh directory, do your thing, and leave
 mkdir $tmpdir && \
 iridium --incognito --user-data-dir=$tmpdir;
 rm -r -P $tmpdir
