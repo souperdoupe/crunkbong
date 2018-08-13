@@ -1,0 +1,4 @@
+#!/bin/ksh
+
+# Remove inode
+find . -inum $2 -exec rm -i {} \;
