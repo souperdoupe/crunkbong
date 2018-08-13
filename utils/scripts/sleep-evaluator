@@ -1,0 +1,24 @@
+#!/bin/sh
+
+# This is a pretty shit-tier script.
+# Basically it works alongside a cron command,
+# which runs it every X minutes.
+# crontab entry should look something like this:
+# */14 * * * * /usr/local/sbin/sleep-evaluator
+
+# Specify sleep time
+# 14 minutes = 840 seconds
+sleepTime=840
+# Evaluate timeout time in seconds
+timeout=$(expr $(xssstate -i) / 1000)
+# Choose what to run when the timeout is exceeded
+timeoutProg="/usr/sbin/pm-suspend"
+
+# Evaluate whether the timeout exceeds desired time.
+if [ $timeout -ge $sleepTime ]; # -ge = greater-than or equal-to
+# If so, do the thing.
+then $timeoutProg;
+# If not, then, whatever.
+else return 0;
+fi
+
