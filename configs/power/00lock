@@ -3,12 +3,13 @@
 # Define your display
 export DISPLAY=:0
 # Run a specified program as user
-run(){ su -c "$1" crunkbong; }
+run(){ su -c "$1" omega; }
 
 case $1 in
 	suspend|hibernate)
 		run /usr/bin/slock &
 		;;
 	resume|thaw)
+		run /usr/local/bin/bright &
 		;;
 esac
