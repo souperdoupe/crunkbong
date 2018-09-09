@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# Simple terminal launcher
+urxvt -e "tmux"
