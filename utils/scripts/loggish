@@ -1,0 +1,60 @@
+#!/bin/bash
+
+# Loggish - an atrocious excuse for a logging program
+# Inspired by some common du/df commands that
+# I often run to track programs as they build.
+
+# These variables should become options in future versions.
+time="1"
+name="loggish"
+interp="bash"
+
+# Date nomenclature
+dateFmt=$(date +%Y%m%d-%H%M%S)
+logName="$name_$dateFmt.log"
+
+date_stamp(){ echo $(date) >> ./$logName; }
+get_info(){
+	echo "Current shell is $interp."
+	echo "What conditions am I looking for?"
+	read conditions
+	# Command(s) that will harvest desired log data
+	echo "What $interp commands will I ultimately log?"
+	read outcome
+}
+# I had to nest these in a function, otherwise the looper function complains...
+debug(){
+	echo "Testing conditions..."
+	(eval $conditions)
+	echo "Is the output what you might expect to see? (Type n to break)"
+	read maybe
+	if [[ $maybe == "n" ]]; then
+		echo "Whoops.  Retry your conditions..." && \
+			read conditions && \
+			# That recursion though...
+			debug
+		else return 0
+	fi
+}
+looper(){
+	echo "Waiting for conditions to end..."
+	while sleep $time; do
+		if [[ $(eval $conditions) ]]; then
+			# By default, the variable will just kinda keep changing
+			# the $outcome variable over a period defined by $time...
+			(eval $outcome) > /dev/null;
+			# Once the conditions cease to exist, it'll just log
+			# whatever string it held just before realizing the
+			# conditions are over.
+			else echo $(eval $outcome) >> ./$logName && echo "Done.";
+		fi
+	done
+}
+
+# Run order.
+get_info
+debug
+touch ./$logName
+date_stamp
+looper
+date_stamp

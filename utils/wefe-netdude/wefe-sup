@@ -1,105 +1,166 @@
 #!/bin/bash
 
 # WeFe - wefe enables fidelity everywhere
-# Sup wefe, we now have wpa_supplicant support (Thanks to Head_on_a_Stick for the idea)
-# Sloppy manager to connect wifi through wpa_supplicant
+#  Sloppy manager to connect wifi through wpa_supplicant.
+#  This is the sister-script to the interfaces.d variant.
 #
-# This script was inspired by Ceni the FreeBSD wifi manager
+# wefe-if and wefe-sup were inspired by Ceni the FreeBSD wifi manager
 
 # Verify root
 if [ "$(id -u)" != 0 ]; then echo "Re-run as root.  Exiting..."; exit; fi
 
 # Interface name
-iface="wlan1"
+iface="wlan0"
 # essid
 ssid="$2"
 # Requiring a network's bssid to avoid confusion with other networks
 # of the same essid.  Obviously, this can be removed at your discretion.
 bssid="$3"
+# Define your favorite editor
+editor="nano"
+# Require MAC addresses
+requireMac="false"
 
-# I could easily compress this entire middle portion into a single sed command
-# using the -e option.  However, that would be really big and require
-# word-wrapping, which I find annoying.
+# Function to kill dhclient and wpa_supplicant; suppress errors.
+# It would make more sense to grep the iface first...
+kill_them(){
+	kill -9 $(pgrep dhclient) 2> /dev/null;
+	kill -9 $(pgrep wpa_supplicant) 2> /dev/null;
+	# This is necessary to avoid "RTNETLINK: File exists" complaints.
+	ip addr flush dev "$iface"
+}
+
+# Function to run different pre- or post-connection commands
+# Fun fact: not every network manager lets you do this...
+exops(){
+        # Create a file iface.pre in directory /etc/wefe/exops.d
+        echo "If you'd like any commands to run BEFORE connection?  Type 'yes' if so; anything else to continue."
+                read pre
+                if [[ "$pre" == "yes" ]] ; then
+                        $editor /etc/wefe/exops/"$iface".pre
+                        fi
+        # Create a file iface.post in directory /etc/wefe/exops.d
+        echo "If you'd like any commands to run AFTER connection?  Type 'yes' if so; anything else to continue."
+                read post
+                if [[ "$post" == "yes" ]] ; then
+                        $editor /etc/wefe/exops/"$iface".post
+                        fi
+}
+
+# Function to update the connection
 fun_update(){
 	# Kill them, Johnny.  Kill them all...
-	if [[ $(pgrep wpa_supplicant) ]]; then kill -9 $(pgrep wpa_supplicant); fi
-	if [[ $(pgrep dhclient) ]]; then killall -9 $(ps -ax | grep "dhclient $iface" | grep -v "grep" | awk '{ print $1 }'); fi
+	kill_them && \
+		echo "Killing old processes..." && \
+		# Reconnection can get wonky if you don't wait.
+		sleep 5;
+	# Run exops.pre command
+	sh /etc/wefe/exops/"$iface".pre
 	# Copy the desired ssid config to network interfaces
 	# Note: all configs that end with .cfg will be auto-loaded
-	wpa_supplicant -Dnl80211 -i$iface -c/etc/wefe/wefe-sup/"$ssid" -B
+	wpa_supplicant -Dnl80211 -i$iface -c/etc/wefe/wefe-sup/"$ssid" -B;
 	# Restart the networking daemon
-	dhclient $iface
-	}
+	dhclient $iface;
+	# Run exops.post command
+	sh /etc/wefe/exops/"$iface".post
+}
 
-# Function to splice extra options into your configuration by default.
-# The important things here are the first statement and the last one,
-# since both modify the wpa_supplicant.conf template to append options.
-exops(){
-	sed -i 's/}//g' /etc/wefe/wefe-sup/"$ssid"
-	# If you have any wpasupplicant options to add,
-	# place them in /etc/wefe/wefe-sup/exops
-	for i in /etc/wefe/wefe-sup/exops; do
-		echo "$i" >> /etc/wefe/wefe-sup/"$ssid"
-	done
-	# You can also manipulate whatever you want here.  For example,
-	# if you want to remove the plaintext password, uncomment the following.
-	sed -i 's/#psk.*//g' /etc/wefe/wefe-sup/"$ssid"
- 	echo "}" >> /etc/wefe/wefe-sup/"$ssid"
+# Function to connect to insecure networks
+insecure(){
+	kill_them
+	# Pre-connection commands
+	#sh /etc/wefe/exops/"$iface".pre
+	# This line is all that's required for open networks.
+	iwconfig $iface essid "$ssid"
+	# Use a MAC address (optional)
+	#if [[ "$requireMac" == "true" ]]; then iwconfig "$iface" bssid "$bssid"
+	# For WEP networks, utilize the network key.
+	if [[ "$1" == "-w" ]]; then
+	# Obfuscate the network passphrase.  Ideally, I would have something to just
+	# replace the input values with asterisk so you can see the number of characters
+		echo "Input network passphrase, then press ENTER..." && \
+			stty -echo && \
+	        	read key && \
+        		stty echo && \
+        		# Sanity-checking
+	        	if [[ "$key" == "" ]]; then
+        			echo "No password.  For an open network, try the -u option instead."; exit 0
+                		fi
+		iwconfig $iface key "$key"
+		fi
+	echo "Running dhclient on $iface..." && dhclient $iface
+	# Post-connection commands
+	#sh /etc/wefe/exops/"$iface".post
 }
 
 # Options -- this script requires one of these...
 case $1 in
 
 	# Add a wpa-protected network, and attempt to connect with it.
+	# No need to make all this a function, because it's mostly wpa_supplicant related.
 	-a)
-		# If no bssid was entered, spit and error and exit.
-		if [[ "$bssid" == "" ]]; then echo -e "bssid required\nWill now use -s to scan for mac addresses.  Find yours and rerun the script with it" && \
-		wefe -s && exit 0; fi
+		# Enable if you want to make BSSIDs mandatory.  Can be annoying, but more secure.
+		if [[ "$requireMac" == "true" ]]; then
+		# if no bssid was entered, spit and error and exit.
+		        if [[ "$bssid" == "" ]]; then echo -e "bssid required\nWill now use -s to scan for mac addresses.  Find yours and rerun the script with it" && \
+                		wefe -s && exit 0;
+                	fi
+		fi
 		# Obfuscate the network passphrase.  Ideally, I would have something to just
 		# replace the input values with asterisk so you can see the number of characters
-		echo "Input network passphrase, then press ENTER..." && stty -echo && read key && stty echo && \
+		echo "Input network passphrase, then press ENTER..." && \
+			stty -echo && \
+			read psk && \
+			stty echo && \
+			# Sanity-checking
+			if [[ "$psk" == "" ]]; then
+				echo "No password.  For an open network, try the -u option instead."; exit 0
+			fi
 		# This will generate the bare minimum for an encrypted network.
-		wpa_passphrase "$ssid" "$key" > /etc/wefe/wefe-sup/"$ssid"
-		# If you have any extra options, uncomment this line.
+		wpa_passphrase "$ssid" "$psk" > /etc/wefe/wefe-sup/"$ssid"
+                # Prompt to remove the plaintext password.
+                echo "Do you want to remove the plaintext password from the newly-created config?  Type yes to remove it, anything else to continue."
+                        read rmPsk
+                        if [[ "$rmPsk" == "y" ]]; then
+                                sed -i 's/#psk.*//g' /etc/wefe/wefe-sup/"$iface"
+                        fi
+		# Enter custom commands
+		exops
+		# Prompt to edit the newly-created config
 		# See also: man wpa_supplicant.conf
-		#exops
+		echo "Do you want to edit the configuration before continuing?  Type yes; or, press any key to continue..."
+			read edit
+			if [[ "$edit" == "yes" ]]; then
+				nano /etc/wefe/wefe-sup/"$ssid"
+			fi
 		# Update the network interface
 		fun_update
 		;;
-	# Add an open (unencrypted) network && connect
+
+	# For open (unencrypted) netwoks
 	# I need to test this b/c I'm not sure how the variables will change.
-	#-u)
-		#;;
+	-u|-w) insecure ;;
+
 	# List previously-connected hotspots
-	-l)
-		ls /etc/wpa
-		exit 0
-		;;
+	-l) ls /etc/wpa && exit 0 ;;
 	# Scan for networks: BSSID and ESSID
 	# Currently, the output is atrocious: the AP MAC appears above the ssid
-		-s)
-		iwlist wlan1 scanning | grep -e "Address" -e "ESSID" | sed -e 's/.* Address: //g' -e 's/.* ESSID://g' -e 's/"/"\n/2' -e 's/"//g'
+	-s)
+		iwlist $iface scanning | grep -e "Address" -e "ESSID" | sed -e 's/.* Address: //g' -e 's/.* ESSID://g' -e 's/"/"\n/2' -e 's/"//g' && \
 		exit 0
 		;;
-	# Connect to a saved hotspot
-	-c)
-		fun_update
-		;;
+	# Connect to a saved WPA hotspot
+	-c) fun_update	;;
 	# Temporarily change the interface for a currently-used file, and connect or reconnect
 	# This can be useful if you're hotplugging a new USB wifi device
 	#	(eg, a udev command that runs this to automatically switch between the default device
 	#	and a usb device)
-	-i)
-		iface="$3"
-		fun_update
-		;;
+	-i) iface="$3" && fun_update ;;
+	# Kill dhclient and wpa_supplicant
+	-k) kill_them && exit 0 ;;
 	# If options are passed incorrectly (or not at all), exit
 	*)
-		echo "Usage: wefe (-a|-u|-i|-l|-s|-c) ssid [ bssid ]"
+		echo "Usage: wefe (-a|-u|-w|-i|-k|-l|-s|-c) ssid [ bssid ]"
 		exit 0
 		;;
 esac
-
-# Just in case I want to add anything before formally killing the script
-# eg, passing a line for openvpn, network information, etc.
-exit 0
