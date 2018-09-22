@@ -7,7 +7,7 @@ if [ ! -d /etc/wefe ]; then echo "/etc/wefe doesn't exist.  Run the installer be
 iface=ral0
 
 ## --ALL THE FUNCTIONS -- ##
-##						  ##
+##			  ##
 
 # Add a new wireless network
 add_network(){
@@ -26,7 +26,7 @@ add_network(){
 	echo "Enter the hotspot MAC address (optional):"
 	read bssid
 	ap=$(echo "$ssid" | sed 's/ /_/g')
-    # Spoof the MAC address, if desired
+	# Spoof the MAC address, if desired
 	echo "Would you like to spoof the MAC address of $iface? Options:
                 New Address:    type it in XX:XX:XX:XX:XX:XX format
                 Random address: type 'random'  
@@ -53,12 +53,13 @@ purge_settings(){
 	ifconfig $iface -nwid 2> /dev/null
 	ifconfig $iface -inet -wpa -wpakey -group egress 2> /dev/null
 	ifconfig $iface up
+	echo "Done."
 	}
 
 # Connect to an access point
 connect(){
 	# Clean network settings
-	purge_settings
+	purge_settings && echo "Attempting to connect to $ssid..."
 	# Each file in /etc/wefe/saved contains an ifconfig-dhclient template, along with
 	# any user-specified pre- and post-connection commands
 	/bin/ksh /etc/wefe/saved/"$ap" && \
@@ -143,7 +144,7 @@ install)
 	;;
 
 # Lazy mode (autoconnect) - I use this in my /etc/apm/suspend and hibernate scripts
--l) lazy_connect ;;
+lazy) lazy_connect ;;
 
 # List saved networks
 list) stored_ap ;;
@@ -158,6 +159,7 @@ scan)
 	# Otherwise, show them as stored in /etc/wefe/saved
 	else scan_ap && strip_ap; fi;;
 
+# Basic help menu
 help) echo "WeFe - the minimalist network assistant.
 wefe [option]
 Options:
