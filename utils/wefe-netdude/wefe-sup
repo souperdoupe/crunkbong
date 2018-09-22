@@ -4,22 +4,26 @@
 #  Sloppy manager to connect wifi through wpa_supplicant.
 #  This is the sister-script to the interfaces.d variant.
 #
-# wefe-if and wefe-sup were inspired by Ceni the FreeBSD wifi manager
+# wefe-if and wefe-sup were inspired by Ceni and the FreeBSD wifi manager
 
 # Verify root
 if [ "$(id -u)" != 0 ]; then echo "Re-run as root.  Exiting..."; exit; fi
 
-# Interface name
-iface="wlan0"
-# essid
-ssid="$2"
+
+#	OPTIONS		#
+
+iface="wlan0"		# Interface name
+ssid="$2"		# # essid
 # Requiring a network's bssid to avoid confusion with other networks
-# of the same essid.  Obviously, this can be removed at your discretion.
+# of the same essid; also a wireless security practice.
 bssid="$3"
-# Define your favorite editor
-editor="nano"
-# Require MAC addresses
-requireMac="false"
+requireMac="false"	# Require MAC addresses for networks
+editor="nano"		# For use with additional options
+wpaDriver="nl80211"	# wpasupplicant driver
+wpaOptions="-B" 	# Other wpasupplicant options
+
+
+#	FUNCTIONS	#
 
 # Function to kill dhclient and wpa_supplicant; suppress errors.
 # It would make more sense to grep the iface first...
@@ -38,13 +42,13 @@ exops(){
                 read pre
                 if [[ "$pre" == "yes" ]] ; then
                         $editor /etc/wefe/exops/"$iface".pre
-                        fi
+                fi
         # Create a file iface.post in directory /etc/wefe/exops.d
         echo "If you'd like any commands to run AFTER connection?  Type 'yes' if so; anything else to continue."
                 read post
                 if [[ "$post" == "yes" ]] ; then
                         $editor /etc/wefe/exops/"$iface".post
-                        fi
+                fi
 }
 
 # Function to update the connection
@@ -58,7 +62,7 @@ fun_update(){
 	sh /etc/wefe/exops/"$iface".pre
 	# Copy the desired ssid config to network interfaces
 	# Note: all configs that end with .cfg will be auto-loaded
-	wpa_supplicant -Dnl80211 -i$iface -c/etc/wefe/wefe-sup/"$ssid" -B;
+	wpa_supplicant -D$wpaDriver -i$iface -c/etc/wefe/wefe-sup/"$ssid" $wpaOptions;
 	# Restart the networking daemon
 	dhclient $iface;
 	# Run exops.post command
@@ -76,8 +80,8 @@ insecure(){
 	#if [[ "$requireMac" == "true" ]]; then iwconfig "$iface" bssid "$bssid"
 	# For WEP networks, utilize the network key.
 	if [[ "$1" == "-w" ]]; then
-	# Obfuscate the network passphrase.  Ideally, I would have something to just
-	# replace the input values with asterisk so you can see the number of characters
+		# Obfuscate the network passphrase.  Ideally, I would have something to just
+		# replace the input values with asterisk so you can see the number of characters
 		echo "Input network passphrase, then press ENTER..." && \
 			stty -echo && \
 	        	read key && \
@@ -88,12 +92,15 @@ insecure(){
                 		fi
 		iwconfig $iface key "$key"
 		fi
+	# Connect to open/wep network
 	echo "Running dhclient on $iface..." && dhclient $iface
 	# Post-connection commands
 	#sh /etc/wefe/exops/"$iface".post
 }
 
-# Options -- this script requires one of these...
+
+#	USAGE		#
+
 case $1 in
 
 	# Add a wpa-protected network, and attempt to connect with it.
@@ -101,7 +108,7 @@ case $1 in
 	-a)
 		# Enable if you want to make BSSIDs mandatory.  Can be annoying, but more secure.
 		if [[ "$requireMac" == "true" ]]; then
-		# if no bssid was entered, spit and error and exit.
+			# if no bssid was entered, spit and error and exit.
 		        if [[ "$bssid" == "" ]]; then echo -e "bssid required\nWill now use -s to scan for mac addresses.  Find yours and rerun the script with it" && \
                 		wefe -s && exit 0;
                 	fi
