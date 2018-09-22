@@ -1,0 +1,43 @@
+#!/bin/sh
+
+# Loggish - an atrocious excuse for a logging program
+# This is mostly shorthand for some du/df commands I'll run
+# while apps compile
+# 1. Log start time
+# 2. Loop through simple conditions, and kill the loop when they no longer exist
+# 3. Log end time
+
+# These variables should become options in future versions.
+time=1
+name="logger"
+# Date nomenclature
+dateFmt=$(date +%Y%m%d-%H%M%S)
+logName=$name_$datestamp.log
+date_stamp(){ echo $(date) >> ./$logName }
+
+echo "What conditions for the $(echo $0) shell am I looking for?"
+read conditions
+	echo "What $(echo 0) commands should I run while these conditions are true?"
+	read outcome
+	echo "Running logger..."
+}
+
+looper(){
+	while sleep $time; do
+		if [[ $conditions ]]; then
+			# By default, the variable will just kinda keep changing
+			# over a period defined by the $time variable
+			$outcome;
+			# Once the conditions cease to exist, it'll just log
+			# whatever string it held just before realizing the
+			# conditions are over.
+			else echo $outcome >> $logName
+		fi
+	done
+}
+
+date_stamp
+conditions
+looper
+date_stamp
+exit 0

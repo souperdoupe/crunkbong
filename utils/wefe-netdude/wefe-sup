@@ -9,9 +9,6 @@
 # Verify root
 if [ "$(id -u)" != 0 ]; then echo "Re-run as root.  Exiting..."; exit; fi
 
-
-#	OPTIONS		#
-
 # In the future, add "source /etc/wefe/wefe.conf" or something...
 iface="wlan0"		# Preferred wireless interface
 requireMac="false"	# Require MAC addresses for networks (hardening)
@@ -24,8 +21,6 @@ bssid="$3"
 ssid="$2"
 currentSsid=$(/sbin/iwconfig wlan0 | awk '{ print $4 }' | head -n 1 | sed 's/ESSID://g')
 currentInet=$(/sbin/ifconfig wlan0 | grep "inet" | awk '{ print $2 }')
-
-#	FUNCTIONS	#
 
 # Function to kill dhclient and wpa_supplicant; suppress errors.
 # It would make more sense to grep the iface first...
@@ -96,9 +91,7 @@ insecure(){
 	#sh /etc/wefe/exops/"$iface".post
 }
 
-
-#	USAGE		#
-
+# In the future, might want to replace this with getopts
 case $1 in
 
 	# Add a wpa-protected network, and attempt to connect with it.
