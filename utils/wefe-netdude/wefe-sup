@@ -12,16 +12,18 @@ if [ "$(id -u)" != 0 ]; then echo "Re-run as root.  Exiting..."; exit; fi
 
 #	OPTIONS		#
 
-iface="wlan0"		# Interface name
-ssid="$2"		# # essid
-# Requiring a network's bssid to avoid confusion with other networks
-# of the same essid; also a wireless security practice.
-bssid="$3"
-requireMac="false"	# Require MAC addresses for networks
-editor="nano"		# For use with additional options
+# In the future, add "source /etc/wefe/wefe.conf" or something...
+iface="wlan0"		# Preferred wireless interface
+requireMac="false"	# Require MAC addresses for networks (hardening)
+editor="nano"		# For additional options or adjustments
 wpaDriver="nl80211"	# wpasupplicant driver
 wpaOptions="-B" 	# Other wpasupplicant options
 
+# Non-adjustable variables...
+bssid="$3"
+ssid="$2"
+currentSsid=$(/sbin/iwconfig wlan0 | awk '{ print $4 }' | head -n 1 | sed 's/ESSID://g')
+currentInet=$(/sbin/ifconfig wlan0 | grep "inet" | awk '{ print $2 }')
 
 #	FUNCTIONS	#
 
@@ -58,15 +60,11 @@ fun_update(){
 		echo "Killing old processes..." && \
 		# Reconnection can get wonky if you don't wait.
 		sleep 5;
-	# Run exops.pre command
-	sh /etc/wefe/exops/"$iface".pre
-	# Copy the desired ssid config to network interfaces
-	# Note: all configs that end with .cfg will be auto-loaded
-	wpa_supplicant -D$wpaDriver -i$iface -c/etc/wefe/wefe-sup/"$ssid" $wpaOptions;
-	# Restart the networking daemon
-	dhclient $iface;
-	# Run exops.post command
-	sh /etc/wefe/exops/"$iface".post
+	sh /etc/wefe/exops/"$iface".pre 2> /dev/null
+	wpa_supplicant -D$wpaDriver -i$iface -c/etc/wefe/wefe-sup/"$ssid" $wpaOptions && \
+	dhclient $iface && \
+	echo "Connected to $currentSsid ($currentInet)"
+	sh /etc/wefe/exops/"$iface".post 2> /dev/null
 }
 
 # Function to connect to insecure networks
