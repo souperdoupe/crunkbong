@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/ksh93
 
 # WeFe - wefe enables fidelity everywhere
 #  Sloppy manager to connect wifi through wpa_supplicant.
@@ -6,9 +6,22 @@
 #
 # wefe-if and wefe-sup were inspired by Ceni and the FreeBSD wifi manager
 
+# WIP
+# 1) Change the config files naming schema to replace whitespace with
+#	underscore, and also modify the 'add' command to have ssid input
+#	within the function, rather than passing it as a command.  Same thing
+#	for -c.  Rationale: currently reads $2 as the ssid, and thus a name like
+#	"butt net" would be $2 and $3, respectively.
+#	Possible workarounds:
+#		a) set a function like "read essid"; or
+#		b) find a way to say, "everything after -c will be the variable"
+# 2) Create a "source" file, wefe.conf, with global values, not just for
+#	variables, but also for default behaviors (eg, strip plaintext passphrases
+#	by default).
+# 3) Add a test/debug command, shorthand to drop the -B (daemonize) function
+
 # Verify root
 if [ "$(id -u)" != 0 ]; then echo "Re-run as root.  Exiting..."; exit; fi
-
 
 #	OPTIONS		#
 
@@ -19,7 +32,7 @@ editor="nano"		# For additional options or adjustments
 wpaDriver="nl80211"	# wpasupplicant driver
 wpaOptions="-B" 	# Other wpasupplicant options
 
-# Non-adjustable variables...
+# Other variables...
 bssid="$3"
 ssid="$2"
 currentSsid=$(/sbin/iwconfig wlan0 | awk '{ print $4 }' | head -n 1 | sed 's/ESSID://g')
@@ -43,13 +56,13 @@ exops(){
         echo "If you'd like any commands to run BEFORE connection?  Type 'yes' if so; anything else to continue."
                 read pre
                 if [[ "$pre" == "yes" ]] ; then
-                        $editor /etc/wefe/exops/"$iface".pre
+                        $editor /etc/wefe/wefe-sup/exops/"$ssid".pre
                 fi
         # Create a file iface.post in directory /etc/wefe/exops.d
         echo "If you'd like any commands to run AFTER connection?  Type 'yes' if so; anything else to continue."
                 read post
                 if [[ "$post" == "yes" ]] ; then
-                        $editor /etc/wefe/exops/"$iface".post
+                        $editor /etc/wefe/wefe-sup/exops/"$ssid".post
                 fi
 }
 
@@ -60,11 +73,11 @@ fun_update(){
 		echo "Killing old processes..." && \
 		# Reconnection can get wonky if you don't wait.
 		sleep 5;
-	sh /etc/wefe/exops/"$iface".pre 2> /dev/null
+	sh /etc/wefe/wefe-sup/exops/"$ssid".pre 2> /dev/null
 	wpa_supplicant -D$wpaDriver -i$iface -c/etc/wefe/wefe-sup/"$ssid" $wpaOptions && \
 	dhclient $iface && \
 	echo "Connected to $currentSsid ($currentInet)"
-	sh /etc/wefe/exops/"$iface".post 2> /dev/null
+	sh /etc/wefe/wefe-sup/exops/"$ssid".post 2> /dev/null
 }
 
 # Function to connect to insecure networks
