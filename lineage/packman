@@ -1,0 +1,63 @@
+
+#!/system/bin/sh
+
+# PackMan
+# Shit-tier package manager/freezer/etc, for LineageOS
+# A serious work in progress.
+
+# Goals
+# - Easily freeze and defrost apps using LOS built-in components
+# - See which packages are available on the system
+# There are a lot of issues with the way LOS manages packages.
+# I have homework to do...
+
+defrost(){
+	# Basically this will just be the reverse of freeze
+	exit 0;
+}
+
+freeze(){
+	# Type esc+:e and press s
+	# Write a minus-sign by the packages you want to freeze
+	vim /sdcard/packages.list &&
+	echo "Updating package.list..." && \
+	cp /sdcard/packages.list /sdcard/.packages.list.tmp && \
+	mv /sdcard/packages.list.tmp /sdcard/packages.list && \
+	echo "Done."
+	# Generate a list of frozen packages.
+	# Fun fact: the ^- will pull the minus character only at the beginning of a line
+	cat /sdcard/packages.list | grep '^-' > /sdcard/packages.freeze
+	echo "Generating list of frozen packages in /sdcard/packages.freeze..." && \
+	sed -i 's/^-//g' /sdcard/packages.freeze && \
+	echo "Done."
+	# It's freezing time.
+	echo "Preparing to freeze packages in /sdcard/packages.freeze..."
+	for freeze in $(cat /sdcard/packages.freeze); do
+		pm disable "$freeze"
+	done && \
+	if [ $? -ne 0 ]; then
+		echo "There was an error, but I care not."
+		else echo "I have performed my task.  Art thou yet entertained?"
+	fi
+}
+
+generateList(){
+	# This one is gona be a bitch to write and I'm not in the mood rn
+	exit 0
+}
+
+case $1 in
+	f|freeze)
+		freeze
+		;;
+	d|defrost)
+		defrost
+		;;
+	a|all)
+		cat /sdcard/packages.list
+		;;
+	*)
+		echo "Incorrect usage."
+		;;
+esac
+	
