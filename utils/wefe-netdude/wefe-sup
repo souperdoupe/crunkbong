@@ -178,7 +178,7 @@ case $1 in
 	# Kill dhclient and wpa_supplicant
 	kill) kill_them && exit 0 ;;
 	# Connect to usb ethernet/tethering
-	usb) wefe kill && dhclient usb0
+	usb) wefe kill && dhclient usb0 ;;
 	# If options are passed incorrectly (or not at all), exit
 	*)
 		echo "Usage: wefe (on|add|scan|kill|nopass|wep|list|iface|usb) ssid [ bssid ]"
