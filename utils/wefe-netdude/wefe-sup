@@ -47,6 +47,8 @@ kill_them(){
 	kill -9 $(pgrep wpa_supplicant) 2> /dev/null;
 	# This is necessary to avoid "RTNETLINK: File exists" complaints.
 	ip addr flush dev "$iface"
+	# Flush interface info.
+	/sbin/ifconfig wlan0 inet 0.0.0.0 # Removes existing IP address
 }
 
 # Function to run different pre- or post-connection commands
@@ -117,12 +119,12 @@ case $1 in
 
 	# Add a wpa-protected network, and attempt to connect with it.
 	# No need to make all this a function, because it's mostly wpa_supplicant related.
-	-a)
+	add)
 		# Enable if you want to make BSSIDs mandatory.  Can be annoying, but more secure.
 		if [[ "$requireMac" == "true" ]]; then
 			# if no bssid was entered, spit and error and exit.
-		        if [[ "$bssid" == "" ]]; then echo -e "bssid required\nWill now use -s to scan for mac addresses.  Find yours and rerun the script with it" && \
-                		wefe -s && exit 0;
+		        if [[ "$bssid" == "" ]]; then echo -e "bssid required\nWill now scan for mac addresses.  Find yours and rerun the script with it" && \
+                		wefe scan && exit 0;
                 	fi
 		fi
 		# Obfuscate the network passphrase.  Ideally, I would have something to just
@@ -158,26 +160,28 @@ case $1 in
 
 	# For open (unencrypted) netwoks
 	# I need to test this b/c I'm not sure how the variables will change.
-	-u|-w) insecure ;;
+	nopass|wep) insecure ;;
 
-	-l) ls /etc/wpa && exit 0 ;; # List previously-connected hotspots
+	list) ls /etc/wefe/wefe-sup && exit 0 ;; # List previously-connected hotspots
 
-	-s) 	# Scan for available networks and their information
+	scan) 	# Scan for available networks and their information
 		scan
 		exit 0
 		;;
 	# Connect to a saved WPA hotspot
-	-c) fun_update	;;
-	# Temporarily change the interface for a currently-used file, and connect or reconnect
+	on) fun_update	;;
+	# WIP: Temporarily change the interface for a currently-used file, and connect or reconnect
 	# This can be useful if you're hotplugging a new USB wifi device
 	#	(eg, a udev command that runs this to automatically switch between the default device
 	#	and a usb device)
-	-i) iface="$3" && fun_update ;;
+	iface) iface="$3" && fun_update ;;
 	# Kill dhclient and wpa_supplicant
-	-k) kill_them && exit 0 ;;
+	kill) kill_them && exit 0 ;;
+	# Connect to usb ethernet/tethering
+	usb) wefe kill && dhclient usb0
 	# If options are passed incorrectly (or not at all), exit
 	*)
-		echo "Usage: wefe (-a|-u|-w|-i|-k|-l|-s|-c) ssid [ bssid ]"
+		echo "Usage: wefe (on|add|scan|kill|nopass|wep|list|iface|usb) ssid [ bssid ]"
 		exit 0
 		;;
 esac
