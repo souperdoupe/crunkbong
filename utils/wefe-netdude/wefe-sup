@@ -35,21 +35,24 @@ wpaOptions="-B" 	# Other wpasupplicant options
 # Other variables...
 bssid="$3"
 ssid="$2"
+# ssid and inet values are often slow to show, because iwconfig/ip/ifconfig
+# take their sweet time to load them, and I'm not sure why.
 currentSsid=$(/sbin/iwconfig wlan0 | awk '{ print $4 }' | head -n 1 | sed 's/ESSID://g')
-currentInet=$(/sbin/ifconfig wlan0 | grep "inet" | awk '{ print $2 }')
+currentInet=$(ip route get 1 | awk '{print $NF;exit}')
+#currentInet=$(/sbin/ifconfig wlan0 | grep "inet" | awk '{ print $2 }')
 
 #	FUNCTIONS	#
 
 # Function to kill dhclient and wpa_supplicant; suppress errors.
 # It would make more sense to grep the iface first...
 kill_them(){
-	kill -9 $(pgrep dhclient) 2> /dev/null;
-	kill -9 $(pgrep wpa_supplicant) 2> /dev/null;
+	echo "Killing dhclient processes...[ $(pgrep dhclient) ]" && kill -9 $(pgrep dhclient);
+	echo "Killing wpa_supplicant processes...[ $(pgrep wpa_supplicant) ]" && kill -9 $(pgrep wpa_supplicant);
 	# This is necessary to avoid "RTNETLINK: File exists" complaints.
-	ip addr flush dev "$iface"
-	# Flush interface info.
-	/sbin/ifconfig wlan0 inet 0.0.0.0 # Removes existing IP address
-}
+	echo "ip is flushing $iface..." && ip addr flush dev "$iface";
+	# Remove lingering IP addresses
+	echo "Reset $iface ip address ..." && /sbin/ifconfig "$iface" inet 0.0.0.0 &&;
+} 2>> /tmp/wefe.errors
 
 # Function to run different pre- or post-connection commands
 # Fun fact: not every network manager lets you do this...
@@ -72,15 +75,17 @@ exops(){
 fun_update(){
 	# Kill them, Johnny.  Kill them all...
 	kill_them && \
-		echo "Killing old processes..." && \
-		# Reconnection can get wonky if you don't wait.
-		sleep 5;
+	# Reconnection can get wonky if you don't wait.
+	sleep 5;
 	sh /etc/wefe/wefe-sup/exops/"$ssid".pre 2> /dev/null
+	echo "wpa_supplicant is trying to connect to $ssid on $iface..."
 	wpa_supplicant -D$wpaDriver -i$iface -c/etc/wefe/wefe-sup/"$ssid" $wpaOptions && \
-	dhclient $iface && \
-	echo "Connected to $currentSsid ($currentInet)"
+		echo "ESTABLISHED [ $(pgrep wpa_supplicant) ]" && \
+	echo "dhclient is connecting to $iface..." && \
+		dhclient $iface && echo "SUCCESS [ $(pgrep dhclient) ]" && \
+		echo "Connected to $currentSsid ($currentInet)"
 	sh /etc/wefe/wefe-sup/exops/"$ssid".post 2> /dev/null
-}
+} 2> /tmp/wefe.errors
 
 # Function to connect to insecure networks
 insecure(){
@@ -185,3 +190,5 @@ case $1 in
 		exit 0
 		;;
 esac
+
+if [ "$?" != 0 ]; then echo "Errors occurred.  See /tmp/wefe.errors for more info."; fi
